@@ -7,10 +7,12 @@ import json
 import numpy as np
 import math
 import os
+import ipdb
 
 import rwkv_config
 # import tqdm
 
+# ipdb.set_trace()
 
 
 # 定义数据集
@@ -155,11 +157,8 @@ class WKV(torch.autograd.Function):
         # elif os.environ['RWKV_FLOAT_MODE'] == 'bf16':
         #     return (None, None, None, gw.bfloat16(), gu.bfloat16(), gk.bfloat16(), gv.bfloat16())
 
-
-
 def RUN_CUDA(B, T, C, w, u, k, v):
     return WKV.apply(B, T, C, w.cuda(), u.cuda(), k.cuda(), v.cuda())
-
 
 class RWKV_TimeMix(torch.jit.ScriptModule):
     def __init__(self, layer_id):
@@ -259,7 +258,6 @@ class RWKV_TimeMix(torch.jit.ScriptModule):
         rwkv = self.output(rwkv)  # 对应公式 (15)
         return rwkv
 
-
 class RWKV_ChannelMix(torch.jit.ScriptModule):
     def __init__(self, layer_id):
         super().__init__()
@@ -338,7 +336,6 @@ class Block(nn.Module):
         x = x + self.channel_mix(self.ln2(x))
         return x
 
-
 class RWKV(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()
@@ -413,8 +410,6 @@ class RWKV(nn.Module):
             loss = F.cross_entropy(x.view(-1, x.size(-1)), targets.to(x.device).view(-1))
        
         return L2Wrap.apply(loss, x)
-
-
 
 
 if __name__ == '__main__':
