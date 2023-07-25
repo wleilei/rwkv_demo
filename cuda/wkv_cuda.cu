@@ -6,8 +6,6 @@
 // Defines a constant for minimum value
 #define MIN_VALUE (-1e38)
 
-// 这个文件是原论文公式（14）的cuda实现
-// 维度并行计算，字串行计算
 
 
 template <typename F>
@@ -22,20 +20,18 @@ __global__ void kernel_forward(const int B,
    
     const int idx = blockIdx.x * blockDim.x + threadIdx.x;  
     // blockDim.x : B ; threadID.x : C 
-    // 矩阵按行排列，为[B*T*C]，B:batch_size; T:txt_len; C:dimension;
+    
     const int _b = idx / C;  
-    // _b 第几个batch
+    
     const int _c = idx % C;   
-    // 第_b个batch的_c维度
+    
   
     const int _offset = _b * T * C + _c;
-    // 维度索引：第_b个batch的第一行的_c维度
-
-    // 每个字的第_c维度的w,u是一样的？
+    
     F u = _u[_c];
-    // 取值u
+   
     F w = _w[_c];
-    // 取值w
+    
 
     // Calculate the pointers for k, v, and y
     const F *__restrict__ const k = _k + _offset;  
@@ -75,18 +71,18 @@ __global__ void kernel_backward(const int B, const int T, const int C,
                                  F *__restrict__ const _gk, F *__restrict__ const _gv) {
     // Calculate the index for each thread
     // T:1024; C:512
-    const int idx = blockIdx.x * blockDim.x + threadIdx.x; //得出线程id
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x; 
     // Calculate the batch and channel indices
-    const int _b = idx / C; //第几个batch
-    const int _c = idx % C; //第_b个batch的维度
+    const int _b = idx / C; 
+    const int _c = idx % C; 
     // Calculate the offset for indexing into the data
-    const int _offset = _b * T * C + _c; // 维度索引: 
+    const int _offset = _b * T * C + _c; 
 
     F u = _u[_c];   
     F w = _w[_c];
 
     // Calculate the pointers for k, v, and gy
-    const F *__restrict__ const k = _k + _offset;  //_k 为传入的首指针
+    const F *__restrict__ const k = _k + _offset;  
     const F *__restrict__ const v = _v + _offset;
     const F *__restrict__ const gy = _gy + _offset;
 
@@ -117,8 +113,8 @@ __global__ void kernel_backward(const int B, const int T, const int C,
         z[i] = iden;
         zexp[i] = k[ii] + u - no;
 
-        gw += gy[ii] * (dpdw - dqdw * y[i]) * iden * A;  // w只跟A相关计算得出,因为max函数
-        gu += gy[ii] * (v[ii] - y[i]) * B * iden;   // u只跟B相关计算得出，因为max函数
+        gw += gy[ii] * (dpdw - dqdw * y[i]) * iden * A;  
+        gu += gy[ii] * (v[ii] - y[i]) * B * iden;   
 
         no = max(w + o, k[ii]);
         A = exp(w + o - no);

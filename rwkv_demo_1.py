@@ -6,9 +6,11 @@ from torch.utils.data import Dataset, DataLoader
 import json
 import numpy as np
 import math
+import os
 
 import rwkv_config
-import tqdm
+# import tqdm
+
 
 
 # 定义数据集
@@ -90,19 +92,71 @@ class L2Wrap(torch.autograd.Function):
 # 定义模型和优化器
 
 
+local_env = os.environ.copy()
+print(local_env["PATH"])
+local_env["PATH"] = r"D:\Github\rwkv_cu118\Scripts;" + local_env["PATH"]
+os.environ.update(local_env)
 
 ## 将wkv融入torch计算流中
 from torch.utils.cpp_extension import load
 
-'''
+
 T_MAX = 1024
 wkv_cuda = load(name="wkv", sources=["cuda/wkv_op.cpp", "cuda/wkv_cuda.cu"],
-                verbose=True, extra_cuda_cflags=['-res-usage', '--use_fast_math', '-O3',
-                                                 '--maxrregcount=60', '-Xptxas=-O3', f'-DTmax={T_MAX}'])  #
+                verbose=True, extra_cuda_cflags=
+                ['-res-usage', '--use_fast_math', '-O3','--maxrregcount=60', '-Xptxas=-O3', f'-DTmax={T_MAX}'])  
 
-'''
+class WKV(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, B, T, C, w, u, k, v):
+        ctx.B = B
+        ctx.T = T
+        ctx.C = C
+        assert T <= T_MAX
+        assert B * C % min(C, 1024) == 0
+        w = -torch.exp(w.float().contiguous())
+        u = u.float().contiguous()
+        k = k.float().contiguous()
+        v = v.float().contiguous()
+        ctx.save_for_backward(w, u, k, v)
+        y = torch.empty((B, T, C), device='cuda', memory_format=torch.contiguous_format)
+        wkv_cuda.forward(B, T, C, w, u, k, v, y)
+        return y
 
-'''
+        # if '32' in os.environ['RWKV_FLOAT_MODE']:
+        #     return y
+        # elif os.environ['RWKV_FLOAT_MODE'] == 'fp16':
+        #     return y.half()
+        # elif os.environ['RWKV_FLOAT_MODE'] == 'bf16':
+        #     return y.bfloat16()
+
+    @staticmethod
+    def backward(ctx, gy):
+        B = ctx.B
+        T = ctx.T
+        C = ctx.C
+        assert T <= T_MAX
+        assert B * C % min(C, 1024) == 0
+        w, u, k, v = ctx.saved_tensors
+        gw = torch.zeros((B, C), device='cuda').contiguous()
+        gu = torch.zeros((B, C), device='cuda').contiguous()
+        gk = torch.zeros((B, T, C), device='cuda').contiguous()
+        gv = torch.zeros((B, T, C), device='cuda').contiguous()
+        wkv_cuda.backward(B, T, C, w, u, k, v, gy.float().contiguous(), gw, gu, gk, gv)
+        gw = torch.sum(gw, dim=0)
+        gu = torch.sum(gu, dim=0)
+        return (None, None, None, gw, gu, gk, gv)
+
+        #
+        # if '32' in os.environ['RWKV_FLOAT_MODE']:
+        #     return (None, None, None, gw, gu, gk, gv)
+        # elif os.environ['RWKV_FLOAT_MODE'] == 'fp16':
+        #     return (None, None, None, gw.half(), gu.half(), gk.half(), gv.half())
+        # elif os.environ['RWKV_FLOAT_MODE'] == 'bf16':
+        #     return (None, None, None, gw.bfloat16(), gu.bfloat16(), gk.bfloat16(), gv.bfloat16())
+
+
+
 def RUN_CUDA(B, T, C, w, u, k, v):
     return WKV.apply(B, T, C, w.cuda(), u.cuda(), k.cuda(), v.cuda())
 
@@ -284,7 +338,7 @@ class Block(nn.Module):
         x = x + self.channel_mix(self.ln2(x))
         return x
 
-'''
+
 class RWKV(nn.Module):
     def __init__(self, vocab_size):
         super().__init__()
@@ -296,8 +350,8 @@ class RWKV(nn.Module):
         self.emb = nn.Embedding(self.vocab_size, rwkv_config.n_embd)
 
         # RWKV 模块层
-        # self.blocks = nn.Sequential(*[Block(i)
-                                    #   for i in range(rwkv_config.n_layer)])
+        self.blocks = nn.Sequential(*[Block(i)
+                                      for i in range(rwkv_config.n_layer)])
 
         self.ln_out = nn.LayerNorm(rwkv_config.n_embd)
         self.head = nn.Linear(rwkv_config.n_embd, self.vocab_size, bias=False)
@@ -346,7 +400,7 @@ class RWKV(nn.Module):
         x = self.emb(idx)
 
         # RWKV计算
-        # x = self.blocks(x)
+        x = self.blocks(x)
 
         # RWKV-LM head 的 layernorm
         x = self.ln_out(x)
