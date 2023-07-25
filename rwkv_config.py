@@ -4,6 +4,7 @@ import os
 # dataset path
 datafile = os.path.join("data", "enwik8")
 
+
 # training
 lr = 0.00001
 epoch = 10
@@ -20,5 +21,3 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 # model parm
 n_embd = 512
 n_layer = 12
-
-
