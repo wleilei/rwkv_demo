@@ -1,7 +1,7 @@
 # The simple demo of RWKV, which is easy to understand the code.
 
 # Description
-The original code of [RWKV](https://github.com/BlinkDL/RWKV-LM)
+The original code： [RWKV](https://github.com/BlinkDL/RWKV-LM)
 
 环境配置：
 1. cuda版本需为11.8版本，不然可能会报错，下载安装cuda版本在[这](https://developer.nvidia.com/cuda-toolkit-archive)
