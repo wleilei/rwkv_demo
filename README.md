@@ -55,6 +55,8 @@ class Embedding(nn.Module):
 
 1. **tokenshift实现**： 使用“ nn.ZeroPad2d((0, 0, 1, -1)) ”操作将文本左移一个字，然后加上原始文本，进而实现tokenshift操作。因为x的shape为（B,T,C），“ nn.ZeroPad2d((0, 0, 1, -1)) ”的参数是（左，右，上，下）维度上补0操作，其意义是左右不变，在dim2的上方增1行补0，在dim2的下方缩减1行，进而实现左移。
 
+2. 。。。
 
+### 简述Torch梯度更新
 
 
