@@ -59,12 +59,22 @@ class Embedding(nn.Module):
 2. 。。。
 
 ### 简述Torch梯度更新
+。。。
+
+
 
 
 ### Torch调用C++部署模型
 
 
+
+
+。。。
+
 ### CUDA并行计算
+
+
+。。。
 
 
 
