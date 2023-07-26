@@ -101,11 +101,25 @@ print(x.grad)  # 输出张量的梯度为tensor([0.1966])
 
 
 ### Pytorch调用C++部署模型
+1. 使用“ #include <torch/extension.h> ”C++头文件(C++为.cpp、cuda为.cu)，该头文件包含了一些必要的声明和宏定义，用于在C++代码中编写PyTorch的扩展和自定义操作。该头文件提供了以下功能：
+- 定义 torch::Tensor 类型
+- 定义 PyTorch 张量的操作
+- 提供 PyTorch 张量和C++数据类型之间的转换
+- 定义创建PyTorch扩展的宏：通过使用这些宏，可以方便地将C++函数导出为Python接口，并使其能够被PyTorch识别并在Python环境中使用。
+
+2. 使用“ PYBIND11_MODULE ”宏来创建PyTorch扩展模块，是PyTorch和pybind11库提供的一个宏。PyTorch使用pybind11库来提供C++接口，从而使得Python代码能够调用和使用C++代码。PYBIND11_MODULE宏是pybind11库的一部分，它简化了将C++函数导出为Python模块的过程。PYBIND11_MODULE(TORCH_EXTENSION_NAME, m): 这是PyTorch扩展的入口宏，其中，“ TORCH_EXTENSION_NAME ”是扩展模块的名称，它在编译时被设置为宏定义；“ m ”是一个pybind11::module对象，它用于将C++函数和Python接口进行绑定，其一般形式为 m.def("函数名"，具体 C++ 实现的函数指针, "文档", 参数列表)。
+
+3. 使用TORCH_LIBRARY宏，可以将C++函数组织成一个PyTorch扩展库，使得这些函数在Python环境中可以以库的形式调用。“ TORCH_LIBRARY(wkv, m) ”，其中，“ wkv ”是扩展库的名称，在Python中导入库时使用，“ m ”定义也一样。另外，通过这样也让C++程序能够融入pytorch的即时编译（jit）中。
+
+4. “ torch.utils.cpp_extension.load ”函数用于加载和编译C++扩展模块，并将其导入到Python中。
+- name：{类型：字符串； 含义：扩展模块的名称； 作用：指定C++扩展模块的名称，它将在编译和加载时使用。}
+- sources：{类型：列表； 含义：扩展模块的源文件路径列表； 作用：指定C++扩展模块的源文件路径列表。这些源文件将被编译为共享库，用于创建Python模块。}
+- extra_cflags：{类型：列表或None； 含义：额外的C编译标志； 作用：指定额外的C编译标志。这些标志将传递给C编译器，用于控制编译的行为。}
+- extra_cuda_cflags：{类型：列表或None； 含义：额外的CUDA编译标志； 作用：指定额外的CUDA编译标志。这些标志将传递给CUDA编译器，用于控制编译的行为。}
+- with_cuda：{类型：布尔值或None； 含义：是否编译包含CUDA代码的扩展； 作用：如果设置为True，将编译包含CUDA代码的扩展。如果设置为False，将不编译CUDA代码。如果为None，将根据系统环境自动决定是否启用CUDA。}
+- verbose：{类型：布尔值； 含义：是否打印编译详细信息； 作用：如果设置为True，编译过程将打印详细信息。}
 
 
-
-
-。。。
 
 ### CUDA并行计算
 
