@@ -347,8 +347,7 @@ class RWKV(nn.Module):
         self.emb = nn.Embedding(self.vocab_size, rwkv_config.n_embd)
 
         # RWKV 模块层
-        self.blocks = nn.Sequential(*[Block(i)
-                                      for i in range(rwkv_config.n_layer)])
+        self.blocks = nn.Sequential(*[Block(i) for i in range(rwkv_config.n_layer)])
 
         self.ln_out = nn.LayerNorm(rwkv_config.n_embd)
         self.head = nn.Linear(rwkv_config.n_embd, self.vocab_size, bias=False)
