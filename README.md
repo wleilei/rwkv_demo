@@ -3,7 +3,7 @@
 # Description
 The original code （v_4）： [RWKV](https://github.com/BlinkDL/RWKV-LM)
 
-本人小白学习记录，希望复现RWKV学习新东西
+本人小白学习记录，希望复现RWKV学习和应用新知识
 
 # 环境配置：
 
@@ -58,13 +58,48 @@ class Embedding(nn.Module):
 
 2. 。。。
 
-### 简述Torch梯度更新
-。。。
+### 简述Pytorch梯度更新
+**如何应用梯度更新参数**
+1. 假设深度学习模型公式抽象成：L(Y,X) = f(AX+B,Y)，X为样本数据，Y为样本标签，L为损失函数。优化目标是寻找损失函数的最小值。
+2. 因为X和Y是模型数据固定不动，所以要通过变化A和B来寻找最小值，即训练参数。
+3. 计算出A的梯度，有两种情况：若梯度为正，则缩小A来寻找最小值；若梯度为正，则放大A来寻找最小值。所以，一般梯度下降法的核心为：A = A - A梯度，又为防止陷入局部最小值，设计了不同的更新策略。
+4. 为什么不用到二阶导来进行更新参数呢？一方面是，计算一阶导数相对于计算二阶导数来说是相对简单的，特别是在高维空间和复杂模型中，计算Hessian矩阵需要更大的计算开销；另一方面是，Hessian矩阵是函数的二阶导数信息，它描述了函数在某一点处的曲率和凹凸性质。在优化问题中，Hessian矩阵的本征值可以提供有关函数形状的信息。正定的Hessian矩阵表示函数在该点是一个局部最小值，负定的Hessian矩阵表示函数在该点是一个局部最大值，而不定的Hessian矩阵则意味着该点可能是一个鞍点（saddle point），进而导致更新不稳定。
+5. 那么pytorch如何进行梯度反向传播的呢？通过求导的链式法则构建计算图来进行反向传播。我们知道，搭建神经网络模型，通常是上一层的输出作为下一层的输入，即h(x) = g(f(x))，其中f()为第一层，g()为第二层。h对x进行链式求导可得：dh = dg * df。所以梯度的反向传播流程为：计算出下一层的梯度后，在计算上一层的梯度中直接乘下一层得出得梯度即可，举个例子：
+
+```python
+import torch
+
+class MySigmoidFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, input):
+        # 在forward方法中定义sigmoid函数的前向传播
+        sigmoid_output = 1 / (1 + torch.exp(-input))
+        ctx.save_for_backward(sigmoid_output)  # 保存sigmoid输出用于反向传播计算梯度
+        return sigmoid_output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # 在backward方法中定义sigmoid函数的反向传播，计算输入张量的梯度
+        sigmoid_output, = ctx.saved_tensors
+        grad_input = grad_output * sigmoid_output * (1 - sigmoid_output)  # sigmoid函数的导数形式
+        return grad_input  # 返回input的梯度，注意：forward中输入几个参数，
+                           # 则返回几个参数的梯度，参考rwkv_demo_1.py中WKV的实现
+
+# 使用自定义的MySigmoidFunction
+x = torch.tensor([1.0], requires_grad=True)
+y = MySigmoidFunction.apply(x)
+loss = y.sum()
+loss.backward()
+
+print(x.grad)  # 输出张量的梯度为tensor([0.1966])
+
+```
+6. 动态计算图和静态计算图
 
 
 
 
-### Torch调用C++部署模型
+### Pytorch调用C++部署模型
 
 
 
