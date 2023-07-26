@@ -51,6 +51,10 @@ class Embedding(nn.Module):
 
 4. **channnel-mix块**：tokenshift、计算rkv(操作简单，不赘述)
 
+### 模型细节
+
+1. **tokenshift实现**： 
+
 
 
 
