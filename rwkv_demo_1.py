@@ -9,7 +9,7 @@ import math
 import os
 import ipdb
 
-import rwkv_config
+import rwkv_config_1
 # import tqdm
 
 # ipdb.set_trace()
@@ -164,8 +164,8 @@ class RWKV_TimeMix(torch.jit.ScriptModule):
     def __init__(self, layer_id):
         super().__init__()
         self.layer_id = layer_id  # 当前layer id
-        self.ctx_len = rwkv_config.ctx_len  # 最长文本长度
-        self.n_embd = rwkv_config.n_embd  # hidden_state 维度
+        self.ctx_len = rwkv_config_1.ctx_len  # 最长文本长度
+        self.n_embd = rwkv_config_1.n_embd  # hidden_state 维度
 
         # todo 附录D中TimeMix的位置编码w、u(mu)、u 的初始化计算方法
         with torch.no_grad():  # fancy init
@@ -173,9 +173,9 @@ class RWKV_TimeMix(torch.jit.ScriptModule):
             layer_id 是 w_i的 l
             config.n_layer 是 w_i的 L
             """
-            ratio_0_to_1 = (layer_id / (rwkv_config.n_layer - 1))  # 0 to 1   w的  l / (L - 1)
+            ratio_0_to_1 = (layer_id / (rwkv_config_1.n_layer - 1))  # 0 to 1   w的  l / (L - 1)
 
-            ratio_1_to_almost0 = (1.0 - (layer_id / rwkv_config.n_layer))  # 1 to ~0   u(mu)的  1-（l/L）
+            ratio_1_to_almost0 = (1.0 - (layer_id / rwkv_config_1.n_layer))  # 1 to ~0   u(mu)的  1-（l/L）
 
             # fancy time_decay
             decay_speed = torch.ones(self.n_embd)  # 维度的位置编码 [hidden_state_size]
@@ -201,12 +201,12 @@ class RWKV_TimeMix(torch.jit.ScriptModule):
             self.time_first = nn.Parameter(torch.ones(self.n_embd) * math.log(0.3) + zigzag)
 
             # fancy time_mix 对应公式中的(11-13)
-            x = torch.ones(1, 1, rwkv_config.n_embd)
-            for i in range(rwkv_config.n_embd):
+            x = torch.ones(1, 1, rwkv_config_1.n_embd)
+            for i in range(rwkv_config_1.n_embd):
                 """
                 config.n_embd 对应 s
                 """
-                x[0, 0, i] = i / rwkv_config.n_embd
+                x[0, 0, i] = i / rwkv_config_1.n_embd
             self.time_mix_k = nn.Parameter(torch.pow(x, ratio_1_to_almost0))  # 对应 U(mu)_ki
             self.time_mix_v = nn.Parameter(torch.pow(x, ratio_1_to_almost0) + 0.3 * ratio_0_to_1)  # 对应 U(mu)_Vi
             self.time_mix_r = nn.Parameter(torch.pow(x, 0.5 * ratio_1_to_almost0))  # 对应 U(mu)_ri
@@ -215,12 +215,12 @@ class RWKV_TimeMix(torch.jit.ScriptModule):
         self.time_shift = nn.ZeroPad2d((0, 0, 1, -1))
 
         # 定义 Wr Wk Wv
-        self.key = nn.Linear(rwkv_config.n_embd, self.n_embd, bias=False)
-        self.value = nn.Linear(rwkv_config.n_embd, self.n_embd, bias=False)
-        self.receptance = nn.Linear(rwkv_config.n_embd, self.n_embd, bias=False)
+        self.key = nn.Linear(rwkv_config_1.n_embd, self.n_embd, bias=False)
+        self.value = nn.Linear(rwkv_config_1.n_embd, self.n_embd, bias=False)
+        self.receptance = nn.Linear(rwkv_config_1.n_embd, self.n_embd, bias=False)
 
         # 定义 Wo
-        self.output = nn.Linear(self.n_embd, rwkv_config.n_embd, bias=False)
+        self.output = nn.Linear(self.n_embd, rwkv_config_1.n_embd, bias=False)
 
         # todo 不懂
         self.key.scale_init = 0
@@ -269,20 +269,20 @@ class RWKV_ChannelMix(torch.jit.ScriptModule):
         with torch.no_grad():  # fancy init of time_mix
             # todo 参考 time mix中的 的位置编码u(mu) 的初始化计算方法
 
-            ratio_1_to_almost0 = (1.0 - (layer_id / rwkv_config.n_layer))  # 1 to ~0
+            ratio_1_to_almost0 = (1.0 - (layer_id / rwkv_config_1.n_layer))  # 1 to ~0
 
-            x = torch.ones(1, 1, rwkv_config.n_embd)
-            for i in range(rwkv_config.n_embd):
-                x[0, 0, i] = i / rwkv_config.n_embd
+            x = torch.ones(1, 1, rwkv_config_1.n_embd)
+            for i in range(rwkv_config_1.n_embd):
+                x[0, 0, i] = i / rwkv_config_1.n_embd
 
             self.time_mix_k = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
             self.time_mix_r = nn.Parameter(torch.pow(x, ratio_1_to_almost0))
 
-        hidden_sz = 4 * rwkv_config.n_embd
+        hidden_sz = 4 * rwkv_config_1.n_embd
 
-        self.key = nn.Linear(rwkv_config.n_embd, hidden_sz, bias=False)  # 对应公式(17) 中的 W_k
-        self.receptance = nn.Linear(rwkv_config.n_embd, rwkv_config.n_embd, bias=False)  # 对应公式(16) 中的 W_r
-        self.value = nn.Linear(hidden_sz, rwkv_config.n_embd, bias=False)  # 对应公式(18) 中的 W_v
+        self.key = nn.Linear(rwkv_config_1.n_embd, hidden_sz, bias=False)  # 对应公式(17) 中的 W_k
+        self.receptance = nn.Linear(rwkv_config_1.n_embd, rwkv_config_1.n_embd, bias=False)  # 对应公式(16) 中的 W_r
+        self.value = nn.Linear(hidden_sz, rwkv_config_1.n_embd, bias=False)  # 对应公式(18) 中的 W_v
 
         
         self.value.scale_init = 0
@@ -312,12 +312,12 @@ class Block(nn.Module):
         super().__init__()
         self.layer_id = layer_id  # 当前layer的id
 
-        self.ln1 = nn.LayerNorm(rwkv_config.n_embd)
-        self.ln2 = nn.LayerNorm(rwkv_config.n_embd)
+        self.ln1 = nn.LayerNorm(rwkv_config_1.n_embd)
+        self.ln2 = nn.LayerNorm(rwkv_config_1.n_embd)
 
         if self.layer_id == 0:
             # 第一层的时候多做一次LN
-            self.ln0 = nn.LayerNorm(rwkv_config.n_embd)
+            self.ln0 = nn.LayerNorm(rwkv_config_1.n_embd)
 
         # 对应论文time mix 模块
         self.time_mix = RWKV_TimeMix(layer_id)
@@ -342,15 +342,15 @@ class RWKV(nn.Module):
         self.step = 0
         self.vocab_size = vocab_size
 
-        self.ctx_len = rwkv_config.ctx_len
+        self.ctx_len = rwkv_config_1.ctx_len
 
-        self.emb = nn.Embedding(self.vocab_size, rwkv_config.n_embd)
+        self.emb = nn.Embedding(self.vocab_size, rwkv_config_1.n_embd)
 
         # RWKV 模块层
-        self.blocks = nn.Sequential(*[Block(i) for i in range(rwkv_config.n_layer)])
+        self.blocks = nn.Sequential(*[Block(i) for i in range(rwkv_config_1.n_layer)])
 
-        self.ln_out = nn.LayerNorm(rwkv_config.n_embd)
-        self.head = nn.Linear(rwkv_config.n_embd, self.vocab_size, bias=False)
+        self.ln_out = nn.LayerNorm(rwkv_config_1.n_embd)
+        self.head = nn.Linear(rwkv_config_1.n_embd, self.vocab_size, bias=False)
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear)):
@@ -375,8 +375,8 @@ class RWKV(nn.Module):
         ]
 
         print('\n\nDeepSpeed not found. Using torch optimizer instead (probably slower)\n\n')
-        optimizer = torch.optim.Adam(optim_groups, lr=rwkv_config.lr, betas=rwkv_config.betas,
-                                     eps=rwkv_config.eps)
+        optimizer = torch.optim.Adam(optim_groups, lr=rwkv_config_1.lr, betas=rwkv_config_1.betas,
+                                     eps=rwkv_config_1.eps)
 
         return optimizer
 
@@ -387,7 +387,7 @@ class RWKV(nn.Module):
         assert T <= self.ctx_len, "Cannot forward, because len(input) > model ctx_len."
 
         # 放入cuda
-        idx = idx.to(rwkv_config.device)
+        idx = idx.to(rwkv_config_1.device)
 
         # 计步
         self.step += 1
@@ -413,13 +413,13 @@ class RWKV(nn.Module):
 
 if __name__ == '__main__':
     # 数据集
-    train_dataset = RWKVDataset(open(rwkv_config.datafile, "r", encoding="utf-8").read(), rwkv_config.ctx_len)
-    train_dataloader = DataLoader(train_dataset, shuffle=False, pin_memory=True, batch_size=rwkv_config.batch_size)
+    train_dataset = RWKVDataset(open(rwkv_config_1.datafile, "r", encoding="utf-8").read(), rwkv_config_1.ctx_len)
+    train_dataloader = DataLoader(train_dataset, shuffle=False, pin_memory=True, batch_size=rwkv_config_1.batch_size)
     vocab_size = train_dataset.vocab_size  # vacab size
 
     # 模型
     model = RWKV(vocab_size)
-    model.to(device=rwkv_config.device)
+    model.to(device=rwkv_config_1.device)
 
     # 优化器
     optimizer = model.configure_optimizers()
