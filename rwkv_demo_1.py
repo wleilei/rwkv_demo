@@ -315,9 +315,9 @@ class Block(nn.Module):
         self.ln1 = nn.LayerNorm(rwkv_config_1.n_embd)
         self.ln2 = nn.LayerNorm(rwkv_config_1.n_embd)
 
-        if self.layer_id == 0:
-            # 第一层的时候多做一次LN
-            self.ln0 = nn.LayerNorm(rwkv_config_1.n_embd)
+        # if self.layer_id == 0:
+        #     # 第一层的时候多做一次LN
+        #     self.ln0 = nn.LayerNorm(rwkv_config_1.n_embd)
 
         # 对应论文time mix 模块
         self.time_mix = RWKV_TimeMix(layer_id)
@@ -326,8 +326,8 @@ class Block(nn.Module):
 
     def forward(self, x):
         # 第一层的时候多做一次LN
-        if self.layer_id == 0:
-            x = self.ln0(x)
+        # if self.layer_id == 0:
+        #     x = self.ln0(x)
 
         # 先LN 后Time mix 再残差
         x = x + self.time_mix(self.ln1(x))
@@ -345,6 +345,7 @@ class RWKV(nn.Module):
         self.ctx_len = rwkv_config_1.ctx_len
 
         self.emb = nn.Embedding(self.vocab_size, rwkv_config_1.n_embd)
+        self.ln_in = nn.LayerNorm(rwkv_config_1.n_embd)
 
         # RWKV 模块层
         self.blocks = nn.Sequential(*[Block(i) for i in range(rwkv_config_1.n_layer)])
@@ -394,6 +395,8 @@ class RWKV(nn.Module):
 
         # 词嵌入
         x = self.emb(idx)
+
+        x = self.ln_in(x)
 
         # RWKV计算
         x = self.blocks(x)
