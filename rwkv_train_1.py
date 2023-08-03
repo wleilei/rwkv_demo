@@ -1,3 +1,7 @@
+""" 
+训练文件
+ """
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -28,6 +32,8 @@ rwkv_config_1.device = "cuda" if torch.cuda.is_available() else "cpu"
 
 rwkv_config_1.n_embd = 512
 rwkv_config_1.n_layer = 12
+
+rwkv_config_1.model_name = "rwkv_demo"
 
 
 
@@ -456,6 +462,7 @@ if __name__ == '__main__':
         optimizer.step()
         
         print(f"Epoch [{1}], Loss: {loss.item():.4f}")
+    torch.save(model.state_dict(),rwkv_config_1.model_name + ".pth")
         
     
 
