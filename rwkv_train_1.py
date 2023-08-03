@@ -63,7 +63,7 @@ class RWKVDataset(Dataset):
         print(f'Data has {self.data_size} tokens, {self.vocab_size} unique.')
         # Save vocab as json file
         with open('vocab.json', "w", encoding="utf-16") as vocab_file:
-            json.dump(self.itos, vocab_file, ensure_ascii=False)  # 以json格式存储词表
+            json.dump(self.stoi, vocab_file, ensure_ascii=False)  # 以json格式存储词表
 
     def __getitem__(self, _):
         """
@@ -81,7 +81,7 @@ class RWKVDataset(Dataset):
         return x, y
 
     def __len__(self):
-        return 10   # 样本数量
+        return 1000000   # 样本数量
 
 # 定义损失函数，添加L2正则化
 
@@ -343,9 +343,9 @@ class Block(nn.Module):
         #     self.ln0 = nn.LayerNorm(rwkv_config_1.n_embd)
 
         # 对应论文time mix 模块
-        self.time_mix = RWKV_TimeMix(layer_id)
+        self.Time_mix = RWKV_TimeMix(layer_id)
         # 对应论文channel mix模型
-        self.channel_mix = RWKV_ChannelMix(layer_id)
+        self.Channel_mix = RWKV_ChannelMix(layer_id)
 
     def forward(self, x):
         # 第一层的时候多做一次LN
@@ -353,10 +353,10 @@ class Block(nn.Module):
         #     x = self.ln0(x)
 
         # 先LN 后Time mix 再残差
-        x = x + self.time_mix(self.ln1(x))
+        x = x + self.Time_mix(self.ln1(x))
 
         # 先LN 后channel mix 再残差
-        x = x + self.channel_mix(self.ln2(x))
+        x = x + self.Channel_mix(self.ln2(x))
         return x
 
 class RWKV(nn.Module):
@@ -374,7 +374,7 @@ class RWKV(nn.Module):
         self.blocks = nn.Sequential(*[Block(i) for i in range(rwkv_config_1.n_layer)])
 
         self.ln_out = nn.LayerNorm(rwkv_config_1.n_embd)
-        self.head = nn.Linear(rwkv_config_1.n_embd, self.vocab_size, bias=False)
+        self.linear = nn.Linear(rwkv_config_1.n_embd, self.vocab_size, bias=False)
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear)):
@@ -428,7 +428,7 @@ class RWKV(nn.Module):
         x = self.ln_out(x)
 
         # RWKV-LM head
-        x = self.head(x)
+        x = self.linear(x)
 
         loss = None
         if targets is not None:
