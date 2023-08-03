@@ -6,13 +6,31 @@ from torch.utils.data import Dataset, DataLoader
 import json
 import numpy as np
 import math
-import os
+import os, types
 import ipdb
 
-import rwkv_config_1
 # import tqdm
 
 # ipdb.set_trace()
+
+# 定义参数文件
+rwkv_config_1 = types.SimpleNamespace()
+rwkv_config_1.datafile = os.path.join("data", "enwik8")
+
+rwkv_config_1.batch_size = 1
+rwkv_config_1.ctx_len = 1024
+
+rwkv_config_1.lr = 0.00001
+rwkv_config_1.betas = (0.9, 0.999)
+rwkv_config_1.eps = 1e-8
+
+rwkv_config_1.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+rwkv_config_1.n_embd = 512
+rwkv_config_1.n_layer = 12
+
+
+
 
 
 # 定义数据集
@@ -57,7 +75,7 @@ class RWKVDataset(Dataset):
         return x, y
 
     def __len__(self):
-        return 1000
+        return 10   # 样本数量
 
 # 定义损失函数，添加L2正则化
 
@@ -95,7 +113,6 @@ class L2Wrap(torch.autograd.Function):
 
 
 local_env = os.environ.copy()
-print(local_env["PATH"])
 local_env["PATH"] = r"D:\Github\rwkv_cu118\Scripts;" + local_env["PATH"]
 os.environ.update(local_env)
 
@@ -439,7 +456,7 @@ if __name__ == '__main__':
         optimizer.step()
         
         print(f"Epoch [{1}], Loss: {loss.item():.4f}")
-        break
+        
     
 
 
