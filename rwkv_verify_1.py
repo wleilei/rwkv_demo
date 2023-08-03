@@ -47,6 +47,7 @@ class RWKV_RUN(torch.jit.ScriptModule):
                     w[x] = w[x].float()
 
                 w[x].requires_grad = False
+                print(w[x])
                 if rwkv_config_2.RUN_DEVICE == 'cuda' and x != 'emb.weight':
                     w[x] = w[x].cuda()
 
@@ -200,7 +201,12 @@ with torch.no_grad():
     for i in range(src_len):
         x = text_id[:i+1]
         out, state = model.forward(x, state)
-        print(out.detach().cpu().numpy())
+        if i < 3 or i >= src_len - 3:
+            maxx,id = torch.max(out, -1, keepdim=True)
+            print(id.detach().cpu().numpy())
+            print(maxx.detach().cpu().numpy())
+        if i == 2:
+            print('...')
 
 
 

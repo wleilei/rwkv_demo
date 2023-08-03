@@ -81,7 +81,7 @@ class RWKVDataset(Dataset):
         return x, y
 
     def __len__(self):
-        return 1000000   # 样本数量
+        return 1000   # 样本数量
 
 # 定义损失函数，添加L2正则化
 
@@ -450,8 +450,10 @@ if __name__ == '__main__':
     # 优化器
     optimizer = model.configure_optimizers()
 
-    
+    i = 0
     for x,y in train_dataloader:
+         
+        i = i+1
         loss = model(x, y)
         # print(x.dtype)
 
@@ -461,7 +463,7 @@ if __name__ == '__main__':
         loss.backward()
         optimizer.step()
         
-        print(f"Epoch [{1}], Loss: {loss.item():.4f}")
+        print(f"Epoch [{i}], Loss: {loss.item():.4f}")
     torch.save(model.state_dict(),rwkv_config_1.model_name + ".pth")
         
     
