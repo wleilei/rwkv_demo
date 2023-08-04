@@ -13,6 +13,8 @@ import math
 import os, types
 import ipdb
 
+from torchsummary import summary
+
 # import tqdm
 
 # ipdb.set_trace()
@@ -81,7 +83,7 @@ class RWKVDataset(Dataset):
         return x, y
 
     def __len__(self):
-        return 1000   # 样本数量
+        return 10  # 样本数量
 
 # 定义损失函数，添加L2正则化
 
@@ -446,6 +448,8 @@ if __name__ == '__main__':
     # 模型
     model = RWKV(vocab_size)
     model.to(device=rwkv_config_1.device)
+
+    
 
     # 优化器
     optimizer = model.configure_optimizers()
