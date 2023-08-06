@@ -149,7 +149,7 @@ In PyTorch, ```w.data_ptr<float>()``` is a method used to obtain the data pointe
 
 In conclusion, we can integrate CUDA computations into PyTorch and incorporate them into custom neural network layers by using ```torch.autograd.Function``` to define both the forward and backward passes. This enables the integration of CUDA computations into the neural network layers.
 
-### Dynamic Computational Graph and Static Computational Graph.
+### Dynamic Computational Graph and Static Computational Graph
 
 - Dynamic Computational Graph: It refers to the generation of a computation graph dynamically based on the actual input data during each forward pass. PyTorch is a framework that supports dynamic computational graphs, providing high flexibility and interpretability. In dynamic computational graphs, the computation graph is reconstructed every time during the forward pass, making it easy to trace and understand the computation process, which simplifies debugging and error checking. However, dynamic computational graphs require storing a large number of intermediate calculation results during the forward pass, leading to high memory consumption and difficulties in optimization.
 
@@ -174,6 +174,15 @@ class SimpleModel(torch.jit.ScriptModule):  # 继承自 torch.jit.ScriptModule
         x = self.fc2(x)
         return x
 ```
+
+## Loading data
+
+
+## Defining RWKV model
+
+
+
+## Loss function
 
 
 
