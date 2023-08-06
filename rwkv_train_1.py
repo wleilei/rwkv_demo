@@ -89,32 +89,32 @@ class RWKVDataset(Dataset):
 
 class L2Wrap(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, loss, y):
-        ctx.save_for_backward(y)
+    def forward(ctx, loss, x):
+        ctx.save_for_backward(x)
         return loss
 
     @staticmethod
     def backward(ctx, grad_output):
-        y = ctx.saved_tensors[0]
+        x = ctx.saved_tensors[0]
         # to encourage the logits to be close to 0
         # factor 是一个常数，用于控制 L2 正则化的强度。它通过除以 y 的总元素个数 B * T 来对梯度进行缩放。
-        factor = 1e-4 / (y.shape[0] * y.shape[1])
+        factor = 1e-4 / (x.shape[0] * x.shape[1])
         """ 
-         返回一个形状为 [B, T, 1] 的张量 maxx，其中每个元素是该样本对应的输出 y 中的最大值。
+         返回一个形状为 [B, T, 1] 的张量 maxx，其中每个元素是该样本对应的输出 x 中的最大值。
          同时，ids 是一个形状为 [B, T, 1] 的张量，其中每个元素是最大值 maxx 对应的索引。
            """
-        maxx, ids = torch.max(y, -1, keepdim=True)
+        maxx, ids = torch.max(x, -1, keepdim=True)
 
         """ 
-        gy 是一个与 y 相同形状的全零张量。
-        然后，使用 scatter_ 函数，将 maxx * factor 分散到 gy 的每个样本的最大值所在的位置上。
+        gx 是一个与 x 相同形状的全零张量。
+        然后，使用 scatter_ 函数，将 maxx * factor 分散到 gx 的每个样本的最大值所在的位置上。
         也就是说，对于每个样本，将其最大值处的梯度设置为 maxx * factor，其余位置的梯度保持为零。
           """
 
 
-        gy = torch.zeros_like(y)
-        gy.scatter_(-1, ids, maxx * factor)
-        return (grad_output, gy)
+        gx = torch.zeros_like(x)
+        gx.scatter_(-1, ids, maxx * factor)
+        return (grad_output, gx)
 
 
 # 定义模型和优化器
@@ -400,7 +400,6 @@ class RWKV(nn.Module):
                         for pn in sorted(list(no_decay))], "weight_decay": 0.0},
         ]
 
-        print('\n\nDeepSpeed not found. Using torch optimizer instead (probably slower)\n\n')
         optimizer = torch.optim.Adam(optim_groups, lr=rwkv_config_1.lr, betas=rwkv_config_1.betas,
                                      eps=rwkv_config_1.eps)
 

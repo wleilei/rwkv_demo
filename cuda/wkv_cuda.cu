@@ -159,7 +159,7 @@ void cuda_forward(int B, int T, int C, float *w, float *u, float *k, float *v, f
     dim3 threadsPerBlock( min(C, 32) ); // requires --maxrregcount 60 for optimal performance
     // Ensure that the total number of threads is divisible by the number of threads per block
     assert(B * C % threadsPerBlock.x == 0);
-    dim3 numBlocks(B * C / threadsPerBlock.x);  // B个block
+    dim3 numBlocks(B * C / threadsPerBlock.x);  
     // Launch the forward pass kernel
     kernel_forward<<<numBlocks, threadsPerBlock>>>(B, T, C, w, u, k, v, y);
 }
