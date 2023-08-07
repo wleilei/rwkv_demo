@@ -11,7 +11,7 @@ The aim is to learn new things and gain a deeper understanding of the neural net
 - Navigate to the installation path of Python and locate the "libs" folder.
 - Copy the "python38.lib" file from the "libs" folder. Paste the copied "python38.lib" file into the "Scripts" directory of your virtual environment.
 - If the error persists even after copying the "python38.lib" file, rename the duplicated file to "python38_d.lib".
-- Set the batch_size to 1 and the GPU memory will be limited to around 2GB.
+4. Set the batch_size to 1 and the GPU memory will be limited to around 2GB.
 
 ### Importing the Libraries
 ```
