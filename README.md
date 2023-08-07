@@ -296,7 +296,7 @@ class LayerNorm(nn.Module):
 
 ```Small Init Embedding``` refers to the practice of initializing the parameters of the Embedding layer with very small values and adding an additional LayerNorm layer. This approach is primarily employed due to the slow variation of the embedding matrix, which poses challenges for the model to move away from its initial noisy embedding state. Consequently, the embedding matrix is initialized with very small values and then supplemented with a LayerNorm layer. This sequence of steps achieves the effect of "embedding matrix variation -> direction change -> significant LayerNorm variation," leading to improved results, as depicted in Figure 1.
 
-![Figure 1: Effect of small initialization embedding from RWKV.](file:///pictures/851.png)
+![Figure 1: Effect of small initialization embedding from RWKV.](/pictures/851.png)
 
 ### Detailed Explanation of TimeMix Block and ChannelMix Block
 
