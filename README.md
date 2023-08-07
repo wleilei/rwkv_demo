@@ -307,6 +307,9 @@ In contrast to RWKV, the Transformer employs self-attention mechanisms to captur
 So, how does RWKV model contextual information? Through the TokenShift operation and WKV operation.
 
 - TokenShift
+
+
+
 TokenShift (time-shift mixing) refers to the fusion of the vector of the current token with the vector of the preceding token to create a new vector for the current token. The TokenShift operation is integrated within the TimeMix module and the ChannelMix module. In the demo code of this paper, we have 12 RWKV blocks, each containing a TimeMix block and a ChannelMix block. As a result, a total of 24 TokenShift operations are performed in the entire code framework. Since neural network layers can be seen as recursive functions, the information of the current token can be recursively learned from information far in the past. Naturally, shallow TokenShift operations learn local information, while deeper TokenShift operations learn more global information. As the author mentions on his GitHub, it makes sense if you think about it. I also found that you may prefer to use less mixing in higher layers.
 
 ```
@@ -321,6 +324,10 @@ The operation nn.ZeroPad2d((0, 0, 1, -1)) shifts the text to the left by one tok
 The time_mix parameter, a learnable parameter, represents the weights for feature fusion. It can be viewed as controlling the acceptance of information from the current token towards the existing sequence tokens.
 
 - WKV
+
+
+
+
 WKV is an adaptation of the self-attention mechanism from Transformers, realized using the principles of Recurrent Neural Networks (RNNs), integrated within the TimeMix module. Recurrent Neural Networks are mechanisms that enable the propagation of sequential information from one time step to the next. They employ a hidden state $h$ to learn contextual information from past sequence steps and update information at the current time step. This involves two primary operations: the reset gate and the update gate. The reset gate, $h_t = g(x_t, h_{t-1})$, utilizes information from the current time step to reset the hidden state's information, while the update gate, $\tilde{x}_t = f(x_t,h_t)$, employs information from the hidden state to update the current time step's information. The following explanation will be complemented with key code excerpts from the TimeMix module's inference process.
 
 ```
