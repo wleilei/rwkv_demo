@@ -44,46 +44,46 @@ rwkv_config_1.model_name = "rwkv_demo"
 # 定义数据集
 class RWKVDataset(Dataset):
     """
-    输入：data:数据集；ctx_len:句子长度
-    属性：self.vocab_size:词表长度；self.data_size:数据集大小
-    输出：x,y
+    Input: data - Dataset; ctx_len - Sentence length
+    Attributes: self.vocab_size - Vocabulary size; self.data_size - Size of the dataset
+    Output: x, y
     """
 
     def __init__(self, data, ctx_len):
         """
         This is a custom PyTorch Dataset class.
         """
-        self.ctx_len = ctx_len  # 最大文本长度
-        self.data = data  # 原数据集
-        self.data_type = str(type(self.data))  # 原数据集类型
+        self.ctx_len = ctx_len  # Maximum text length
+        self.data = data  # Original dataset
+        self.data_type = str(type(self.data))  # Type of the original dataset
 
-        unique_chars = sorted(list(set(data)))  # 去重后排序
-        self.vocab_size = len(unique_chars)  # 词表长度
-        self.stoi = {ch: i for i, ch in enumerate(unique_chars)}  # token to ID
-        self.itos = {i: ch for i, ch in enumerate(unique_chars)}  # ID to token
-        self.data_size = len(self.data)  # 数据集文本长度
+        unique_chars = sorted(list(set(data)))  # Sorted list of unique characters
+        self.vocab_size = len(unique_chars)  # Vocabulary size
+        self.stoi = {ch: i for i, ch in enumerate(unique_chars)}  # Token to ID mapping
+        self.itos = {i: ch for i, ch in enumerate(unique_chars)}  # ID to token mapping
+        self.data_size = len(self.data)  # Length of the dataset text
         print(f'Data has {self.data_size} tokens, {self.vocab_size} unique.')
         # Save vocab as json file
         with open('vocab.json', "w", encoding="utf-16") as vocab_file:
-            json.dump(self.stoi, vocab_file, ensure_ascii=False)  # 以json格式存储词表
+            json.dump(self.itos, vocab_file, ensure_ascii=False)  # Save vocabulary as JSON
 
     def __getitem__(self, _):
         """
         Returns a random sequence from the dataset.
-        随机从数据集中取一段长度为1024的句子
-        它首先随机选择一个开始索引 start_idx，然后从 data 中取出长度为 ctx_len + 1 的子序列，
-        其中前 ctx_len 个字符是输入 x，后 ctx_len 个字符是输出 y。
-        然后，将 x 和 y 转换为 PyTorch 的 torch.tensor 类型，并返回它们。
+        Randomly selects a start index start_idx from the data and retrieves a subsequence of length ctx_len + 1 from data,
+        where the first ctx_len characters are the input x, and the next ctx_len characters are the output y.
+        Converts x and y to PyTorch torch.tensor type and returns them.
         """
 
-        start_idx = np.random.randint(0, self.data_size - (self.ctx_len + 1))  # 随机取一个开始id
+        start_idx = np.random.randint(0, self.data_size - (self.ctx_len + 1))  # Randomly select a start index
         sequence = [self.stoi[s] for s in self.data[start_idx:start_idx + self.ctx_len + 1]]
-        x = torch.tensor(sequence[:-1], dtype=torch.long)  # input id
-        y = torch.tensor(sequence[1:], dtype=torch.long)  # output id
+        x = torch.tensor(sequence[:-1], dtype=torch.long)  # Input IDs
+        y = torch.tensor(sequence[1:], dtype=torch.long)  # Output IDs
         return x, y
 
     def __len__(self):
-        return 10  # 样本数量
+        return 10  # Returns the number of data samples in the dataset
+
 
 # 定义损失函数，添加L2正则化
 
