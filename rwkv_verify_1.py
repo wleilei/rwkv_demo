@@ -47,7 +47,6 @@ class RWKV_RUN(torch.jit.ScriptModule):
                     w[x] = w[x].float()
 
                 w[x].requires_grad = False
-                print(w[x])
                 if rwkv_config_2.RUN_DEVICE == 'cuda' and x != 'emb.weight':
                     w[x] = w[x].cuda()
 

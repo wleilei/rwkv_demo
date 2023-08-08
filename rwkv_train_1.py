@@ -64,7 +64,9 @@ class RWKVDataset(Dataset):
         self.data_size = len(self.data)  # Length of the dataset text
         print(f'Data has {self.data_size} tokens, {self.vocab_size} unique.')
         # Save vocab as json file
-        with open('vocab.json', "w", encoding="utf-16") as vocab_file:
+        with open('vocab_1.json', "w", encoding="utf-16") as vocab_file:
+            json.dump(self.stoi, vocab_file, ensure_ascii=False)  # Save vocabulary as JSON
+        with open('vocab_2.json', "w", encoding="utf-16") as vocab_file:
             json.dump(self.itos, vocab_file, ensure_ascii=False)  # Save vocabulary as JSON
 
     def __getitem__(self, _):
