@@ -1,6 +1,6 @@
 # The Simple Demo of RWKV to Help Easily Understand the Codes, Logics and Principles.
 
-The aim is to learn new things and gain a deeper understanding of the neural network training process by replicating the demo of RWKV. Next, the focus is on comprehending the underlying principles of RWKV by analyzing the crucial code segments. 中文版本：
+The aim is to learn new things and gain a deeper understanding of the neural network training process by replicating the demo of RWKV. Next, the focus is on comprehending the underlying principles of RWKV by analyzing the crucial code segments. 中文版本：https://zhuanlan.zhihu.com/p/647312884
 
 ## Environment Setup
 
